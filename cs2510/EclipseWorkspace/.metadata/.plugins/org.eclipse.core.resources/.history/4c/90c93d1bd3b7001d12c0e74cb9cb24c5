@@ -1,0 +1,753 @@
+import tester.Tester;
+import java.util.Comparator;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+// contains the abstract classes
+/*
+* TEMPLATE:
+* Fields:
+* ... this.order ... -- Comparator<T>
+* Methods:
+* ... this.insert(T item) ... -- ABST<T>
+* ... this.present(T item) ... -- boolean
+* ... this.getLeftMost() ... -- T
+* ... this.checkLeft(Node<T> that) ...  -- T
+* ... this.sameTree(ABST<T> tree) ... -- boolean
+* ... this.sameData(ABST<T> tree) ... -- boolean
+* ... this.hasData(ABST<T> tree) ... -- boolean
+* ... this.exactData(Node<T> that) ... -- boolean
+* ... this.buildList() ... -- IList<T>
+* ... this.getRight() ... -- ABST<T>
+* Methods on fields:
+* ... order.compare(<T> t1, <T> t2) ... -- int
+*/
+abstract class ABST<T> {
+  Comparator<T> order;
+
+  // Inserts the item into the correct location within the tree
+  ABST<T> insert(T item) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... item ... -- T
+     * Fields of Parameters:
+     * Methods on Parameters:
+     */
+    return new Node<T>(this.order, item, new Leaf<T>(this.order), new Leaf<T>(this.order));
+  }
+
+  // Determines if the item is present within the tree
+  boolean present(T item) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... item ... -- T
+     * Fields of Parameters:
+     * Methods on Parameters:
+     */
+    return false;
+  }
+
+  // gets the leftmost item within the tree
+  T getLeftmost() {
+    throw new RuntimeException("No leftmost item of an empty tree");
+  }
+
+  // returns the data from the left side
+  T checkLeft(Node<T> that) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... that ... -- Node<T>
+     * Fields of Parameters:
+     * ... that.data ... -- T
+     * ... that.left ... -- ABST<T>
+     * ... that.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... that.insert(T item) ... -- ABST<T>
+     * ... that.present(T item) ... -- boolean
+     * ... that.getLeftMost() ... -- T
+     * ... that.checkLeft(Node<T> that) ... -- T
+     * ... that.sameTree(ABST<T> tree) ... -- boolean
+     * ... that.sameData(ABST<T> tree) ... -- boolean
+     * ... that.hasData(ABST<T> tree) ... -- boolean
+     * ... that.exactData(Node<T> that) ... -- boolean
+     * ... that.buildList() ... -- IList<T>
+     * ... that.getRight() ... -- ABST<T>
+     */
+    return that.data;
+  }
+
+  // checks if the two trees are identical
+  boolean sameTree(ABST<T> tree) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... tree ... -- ABST<T>
+     * Fields of Parameters:
+     * ... tree.data ... -- T
+     * ... tree.left ... -- ABST<T>
+     * ... tree.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... tree.insert(T item) ... -- ABST<T>
+     * ... tree.present(T item) ... -- boolean
+     * ... tree.getLeftMost() ... -- T
+     * ... tree.checkLeft(Node<T> that) ... -- T
+     * ... tree.sameTree(ABST<T> tree) ... -- boolean
+     * ... tree.sameData(ABST<T> tree) ... -- boolean
+     * ... tree.hasData(ABST<T> tree) ... -- boolean
+     * ... tree.exactData(Node<T> that) ... -- boolean
+     * ... tree.buildList() ... -- IList<T>
+     * ... tree.getRight() ... -- ABST<T>
+     */
+    return true;
+  }
+
+  // determines if the trees contain the exact same data
+  boolean sameData(ABST<T> tree) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... tree ... -- ABST<T>
+     * Fields of Parameters:
+     * ... tree.data ... -- T
+     * ... tree.left ... -- ABST<T>
+     * ... tree.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... tree.insert(T item) ... -- ABST<T>
+     * ... tree.present(T item) ... -- boolean
+     * ... tree.getLeftMost() ... -- T
+     * ... tree.checkLeft(Node<T> that) ... -- T
+     * ... tree.sameTree(ABST<T> tree) ... -- boolean
+     * ... tree.sameData(ABST<T> tree) ... -- boolean
+     * ... tree.hasData(ABST<T> tree) ... -- boolean
+     * ... tree.exactData(Node<T> that) ... -- boolean
+     * ... tree.buildList() ... -- IList<T>
+     * ... tree.getRight() ... -- ABST<T>
+     */
+    return true;
+  }
+
+  // determines if the trees has the same data
+  boolean hasData(ABST<T> tree) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... tree ... -- ABST<T>
+     * Fields of Parameters:
+     * ... tree.data ... -- T
+     * ... tree.left ... -- ABST<T>
+     * ... tree.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... tree.insert(T item) ... -- ABST<T>
+     * ... tree.present(T item) ... -- boolean
+     * ... tree.getLeftMost() ... -- T
+     * ... tree.checkLeft(Node<T> that) ... -- T
+     * ... tree.sameTree(ABST<T> tree) ... -- boolean
+     * ... tree.sameData(ABST<T> tree) ... -- boolean
+     * ... tree.hasData(ABST<T> tree) ... -- boolean
+     * ... tree.exactData(Node<T> that) ... -- boolean
+     * ... tree.buildList() ... -- IList<T>
+     * ... tree.getRight() ... -- ABST<T>
+     */
+    return true;
+  }
+
+  // determines if this node and that node contain the same data
+  boolean exactData(Node<T> that) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... that ... -- Node<T>
+     * Fields of Parameters:
+     * ... that.data ... -- T
+     * ... that.left ... -- ABST<T>
+     * ... that.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... that.insert(T item) ... -- ABST<T>
+     * ... that.present(T item) ... -- boolean
+     * ... that.getLeftMost() ... -- T
+     * ... that.checkLeft(Node<T> that) ... -- T
+     * ... that.sameTree(ABST<T> tree) ... -- boolean
+     * ... that.sameData(ABST<T> tree) ... -- boolean
+     * ... that.hasData(ABST<T> tree) ... -- boolean
+     * ... that.exactData(Node<T> that) ... -- boolean
+     * ... that.buildList() ... -- IList<T>
+     * ... that.getRight() ... -- ABST<T>
+     */
+    return false;
+  }
+
+  // builds a list from the tree
+  IList<T> buildList() {
+    return new MtList<T>();
+  }
+
+  // gets the right of the tree without the leftmost item
+  ABST<T> getRight() {
+    throw new RuntimeException("No right of an empty tree");
+  }
+
+}
+
+//Will compare the books by title
+class BooksByTitle implements Comparator<Book> {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * Methods:
+   * ... this.compare(Book b1, Book b2) ... -- int
+   */
+
+  // Will return a positive value if the first book comes
+  // first in alphabetical order, a negative value if b2 comes first
+  // and 0 if the books are the same
+  @Override
+  public int compare(Book b1, Book b2) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * b1 -- Book
+     * b2 -- Book
+     * Fields of Parameters:
+     * b1.title -- String
+     * b1.author -- String
+     * b1.price -- int
+     * b2.title -- String
+     * b2.author -- String
+     * b2.price -- int
+     */
+    return b1.title.compareTo(b2.title);
+  }
+}
+
+// Will compare the books by Author
+class BooksByAuthor implements Comparator<Book> {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * Methods:
+   * ... this.compare(Book b1, Book b2) ... -- int
+   */
+
+  // Will return a positive value if the first book comes
+  // first in alphabetical order, a negative value if b2 comes first
+  // and 0 if the books are the same
+  @Override
+  public int compare(Book b1, Book b2) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * b1 -- Book
+     * b2 -- Book
+     * Fields of Parameters:
+     * b1.title -- String
+     * b1.author -- String
+     * b1.price -- int
+     * b2.title -- String
+     * b2.author -- String
+     * b2.price -- int
+     */
+    return b1.author.compareTo(b2.author);
+  }
+}
+
+// WIll compare the books by price
+class BooksByPrice implements Comparator<Book> {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * Methods:
+   * ... this.compare(Book b1, Book b2) ... -- int
+   */
+
+  // Will return a positive value if the first book is more expensive
+  // will return a negative value if the second book is more expensive
+  // will return 0 if the prices are the same
+  @Override
+  public int compare(Book b1, Book b2) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * b1 -- Book
+     * b2 -- Book
+     * Fields of Parameters:
+     * b1.title -- String
+     * b1.author -- String
+     * b1.price -- int
+     * b2.title -- String
+     * b2.author -- String
+     * b2.price -- int
+     */
+    if (b1.price > b2.price) {
+      return 1;
+    }
+    else if (b2.price > b1.price) {
+      return -1;
+    }
+    else {
+      return 0;
+    }
+  }
+}
+
+// represents a leaf in a tree of values
+class Leaf<T> extends ABST<T> {
+
+  // Constructor
+  Leaf(Comparator<T> order) {
+    super.order = order;
+  }
+}
+
+// represents a node in a tree of values
+class Node<T> extends ABST<T> {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * ... this.data ... -- <T>
+   * ... this.left ... -- ABST
+   * ... this.right ... -- ABST
+   * Methods:
+   * Same as ABST<T> class
+   * Methods on Fields:
+   * ... left.insert(T item) ... -- ABST<T>
+   * ... left.present(T item) ... -- boolean
+   * ... left.getLeftMost() ... -- T
+   * ... left.checkLeft(Node<T> that) ... -- T
+   * ... left.sameTree(ABST<T> tree) ... -- boolean
+   * ... left.sameData(ABST<T> tree) ... -- boolean
+   * ... left.hasData(ABST<T> tree) ... -- boolean
+   * ... left.exactData(Node<T> that) ... -- boolean
+   * ... left.buildList() ... -- IList<T>
+   * ... left.getRight() ... -- ABST<T>
+   * ... right.insert(T item) ... -- ABST<T>
+   * ... right.present(T item) ... -- boolean
+   * ... right.getLeftMost() ... -- T
+   * ... right.checkLeft(Node<T> that) ... -- T
+   * ... right.sameTree(ABST<T> tree) ... -- boolean
+   * ... right.sameData(ABST<T> tree) ... -- boolean
+   * ... right.hasData(ABST<T> tree) ... -- boolean
+   * ... right.exactData(Node<T> that) ... -- boolean
+   * ... right.buildList() ... -- IList<T>
+   * ... right.getRight() ... -- ABST<T>
+   */
+  T data;
+  ABST<T> left;
+  ABST<T> right;
+
+  // Constructor
+  Node(Comparator<T> order, T data, ABST<T> left, ABST<T> right) {
+    super.order = order;
+    this.data = data;
+    this.left = left;
+    this.right = right;
+  }
+
+  @Override
+  // Inserts the item into the correct location within the tree
+  public ABST<T> insert(T item) {
+    if (super.order.compare(this.data, item) > 0) {
+      return new Node<T>(super.order, this.data, this.left, this.right.insert(item));
+    }
+    else if (super.order.compare(this.data, item) < 0) {
+      return new Node<T>(super.order, this.data, this.left.insert(item), this.right);
+    }
+    return new Node<T>(super.order, this.data, this.left,
+        new Node<T>(super.order, item, new Leaf<T>(super.order), this.right));
+  }
+
+  @Override
+  // Determines if the item is present within the tree
+  public boolean present(T item) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... item ... -- T
+     * Fields of Parameters:
+     * Methods on Parameters:
+     */
+    if (super.order.compare(this.data, item) > 0) {
+      return this.right.present(item);
+    }
+    else if (super.order.compare(this.data, item) < 0) {
+      return this.left.present(item);
+    }
+    return true;
+  }
+
+  @Override
+  // gets the leftmost item within the tree
+  public T getLeftmost() {
+    return this.left.checkLeft(this);
+  }
+
+  @Override
+  // returns the data from the left side
+  public T checkLeft(Node<T> that) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... that ... -- Node<T>
+     * Fields of Parameters:
+     * ... that.data ... -- T
+     * ... that.left ... -- ABST<T>
+     * ... that.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... that.insert(T item) ... -- ABST<T>
+     * ... that.present(T item) ... -- boolean
+     * ... that.getLeftMost() ... -- T
+     * ... that.checkLeft(Node<T> that) ... -- T
+     * ... that.sameTree(ABST<T> tree) ... -- boolean
+     * ... that.sameData(ABST<T> tree) ... -- boolean
+     * ... that.hasData(ABST<T> tree) ... -- boolean
+     * ... that.exactData(Node<T> that) ... -- boolean
+     * ... that.buildList() ... -- IList<T>
+     * ... that.getRight() ... -- ABST<T>
+     */
+    return this.left.checkLeft(this);
+  }
+
+  @Override
+  // checks if the two trees are identical
+  public boolean sameTree(ABST<T> tree) {
+    return tree.exactData(this);
+  }
+
+  @Override
+  // determines if this node and that node contain the same data
+  public boolean exactData(Node<T> that) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... that ... -- Node<T>
+     * Fields of Parameters:
+     * ... that.data ... -- T
+     * ... that.left ... -- ABST<T>
+     * ... that.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... that.insert(T item) ... -- ABST<T>
+     * ... that.present(T item) ... -- boolean
+     * ... that.getLeftMost() ... -- T
+     * ... that.checkLeft(Node<T> that) ... -- T
+     * ... that.sameTree(ABST<T> tree) ... -- boolean
+     * ... that.sameData(ABST<T> tree) ... -- boolean
+     * ... that.hasData(ABST<T> tree) ... -- boolean
+     * ... that.exactData(Node<T> that) ... -- boolean
+     * ... that.buildList() ... -- IList<T>
+     * ... that.getRight() ... -- ABST<T>
+     */
+    return this.data.equals(that.data) && that.left.sameTree(this.left)
+        && that.right.sameTree(this.right);
+  }
+
+  @Override
+  // determines if the trees has the same data
+  public boolean hasData(ABST<T> tree) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... tree ... -- ABST<T>
+     * Fields of Parameters:
+     * ... tree.data ... -- T
+     * ... tree.left ... -- ABST<T>
+     * ... tree.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... tree.insert(T item) ... -- ABST<T>
+     * ... tree.present(T item) ... -- boolean
+     * ... tree.getLeftMost() ... -- T
+     * ... tree.checkLeft(Node<T> that) ... -- T
+     * ... tree.sameTree(ABST<T> tree) ... -- boolean
+     * ... tree.sameData(ABST<T> tree) ... -- boolean
+     * ... tree.hasData(ABST<T> tree) ... -- boolean
+     * ... tree.exactData(Node<T> that) ... -- boolean
+     * ... tree.buildList() ... -- IList<T>
+     * ... tree.getRight() ... -- ABST<T>
+     */
+    return tree.present(this.data) && this.left.hasData(tree) && this.right.hasData(tree);
+  }
+
+  @Override
+  // determines if the trees contain the exact same data
+  public boolean sameData(ABST<T> tree) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... tree ... -- ABST<T>
+     * Fields of Parameters:
+     * ... tree.data ... -- T
+     * ... tree.left ... -- ABST<T>
+     * ... tree.right ... -- ABST<T>
+     * Methods on Parameters:
+     * ... tree.insert(T item) ... -- ABST<T>
+     * ... tree.present(T item) ... -- boolean
+     * ... tree.getLeftMost() ... -- T
+     * ... tree.checkLeft(Node<T> that) ... -- T
+     * ... tree.sameTree(ABST<T> tree) ... -- boolean
+     * ... tree.sameData(ABST<T> tree) ... -- boolean
+     * ... tree.hasData(ABST<T> tree) ... -- boolean
+     * ... tree.exactData(Node<T> that) ... -- boolean
+     * ... tree.buildList() ... -- IList<T>
+     * ... tree.getRight() ... -- ABST<T>
+     */
+    return this.hasData(tree) && tree.hasData(this);
+  }
+
+  // builds a list from the tree
+  IList<T> buildList() {
+    return null;
+  }
+
+  // gets the right of the tree without the leftmost item
+  ABST<T> getRight() {
+    return null;
+  }
+
+// To represent a book
+  class Book {
+    /*
+     * TEMPLATE:
+     * Fields:
+     * ... this.title ... -- String
+     * ... this.author ... -- String
+     * ... this.price ... -- int
+     * Methods:
+     */
+    String title;
+    String author;
+    int price;
+
+    Book(String title, String author, int price) {
+      this.title = title;
+      this.author = author;
+      this.price = price;
+    }
+  }
+
+//Represents a list of any
+  interface IList<T> {
+
+    // Filters to a list based off the predicate
+    IList<T> filter(Predicate<T> pred);
+
+    // This applies the converter to each element of the list
+    <U> IList<U> map(Function<T, U> converter);
+
+    // This applies a function to all the items in the list to combine
+    // them all into one value
+    <U> U fold(BiFunction<T, U, U> converter, U initial);
+  }
+
+//Represents the predicate for starting with J
+  class StartsWithJ implements Predicate<String> {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... str ... -- String
+     * Methods on Parameters:
+     * Fields of Parameters:
+     */
+    public boolean test(String str) {
+      return str.substring(0, 1).equals("J");
+    }
+  }
+
+//Represents the predicate for ending with 'er'
+  class EndsWithEr implements Predicate<String> {
+    public boolean test(String str) {
+      /*
+       * TEMPLATE:
+       * Parameters:
+       * ... str ... -- String
+       * Methods on Parameters:
+       * Fields of Parameters:
+       */
+      return str.substring(str.length() - 2, str.length()).equals("er");
+    }
+  }
+
+//Represents the function that returns the first three of a string
+  class FirstThree implements Function<String, String> {
+    public String apply(String str) {
+      /*
+       * TEMPLATE:
+       * Parameters:
+       * ... str ... -- String
+       * Methods on Parameters:
+       * Fields of Parameters:
+       */
+      return str.substring(0, 3);
+    }
+  }
+
+//Represents the empty list
+  class MtList<T> implements IList<T> {
+    /*
+     * TEMPLATE:
+     * FIELDS:
+     * METHODS:
+     * ... this.filter(Predicate<T> pred) ... -- IList<T>
+     * ... this.map(Function<T, U> converter) ... -- IList<T>
+     * ... this.fold(BiFunction<T,U,U> converter, U initial ... -- <U>
+     */
+
+    MtList() {
+    }
+
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... pred ... -- Predicate<T>
+     * Methods of Parameters:
+     * pred.test -- boolean
+     */
+    @Override
+    public IList<T> filter(Predicate<T> pred) {
+      // TODO Auto-generated method stub
+      return new MtList<T>();
+    }
+
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... converter ... -- Function<T, U>
+     * Methods of Parameters:
+     * converter.apply -- <U>
+     */
+    @Override
+    public <U> IList<U> map(Function<T, U> converter) {
+      // TODO Auto-generated method stub
+      return new MtList<U>();
+    }
+
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... converter ... -- Function<T, U>
+     * ... initial ... -- U
+     * Methods of Parameters:
+     * converter.apply -- <U>
+     */
+    @Override
+    public <U> U fold(BiFunction<T, U, U> converter, U initial) {
+      // TODO Auto-generated method stub
+      return initial;
+    }
+  }
+
+//Represents the list that contains items
+  class ConsList<T> implements IList<T> {
+    /*
+     * TEMPLATE:
+     * FIELDS:
+     * this.first -- T
+     * this.rest -- IList<T>
+     * METHODS:
+     * ... this.filter(Predicate<T> pred) ... -- IList<T>
+     * ... this.map(Function<T, U> converter) ... -- IList<T>
+     * ... this.fold(BiFunction<T,U,U> converter, U initial ... -- <U>
+     * Methods of fields:
+     * ... rest.filter(Predicate<T> pred) ... -- IList<T>
+     * ... rest.map(Function<T, U> converter) ... -- IList<T>
+     * ... rest.fold(BiFunction<T,U,U> converter, U initial ... -- <U>
+     */
+    T first;
+    IList<T> rest;
+
+    ConsList(T first, IList<T> rest) {
+      this.first = first;
+      this.rest = rest;
+    }
+
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... pred ... -- Predicate<T>
+     * Methods of Parameters:
+     * pred.test -- boolean
+     */
+    @Override
+    // filters a list based on the predicate
+    public IList<T> filter(Predicate<T> pred) {
+      // TODO Auto-generated method stub
+      if (pred.test(this.first)) {
+        return new ConsList<T>(this.first, this.rest.filter(pred));
+      }
+      else {
+        return this.rest.filter(pred);
+      }
+    }
+
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... converter ... -- Function<T, U>
+     * Methods of Parameters:
+     * converter.apply -- <U>
+     */
+    @Override
+    // applies the converter to each in the list
+    public <U> IList<U> map(Function<T, U> converter) {
+      // TODO Auto-generated method stub
+      return new ConsList<U>(converter.apply(this.first), this.rest.map(converter));
+    }
+
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * ... converter ... -- Function<T, U>
+     * ... initial ... -- U
+     * Methods of Parameters:
+     * converter.apply -- <U>
+     */
+    @Override
+    // folds the list into one item based on the converter
+    public <U> U fold(BiFunction<T, U, U> converter, U initial) {
+      // TODO Auto-generated method stub
+      return converter.apply(this.first, this.rest.fold(converter, initial));
+    }
+  }
+
+// Representing the examples
+class ExamplesBST {
+
+  // Constructor
+  ExamplesBST() {
+  }
+ 
+  // Tests the insert method
+ 
+  // Tests the present method
+ 
+  // Tests the getLeftMost method
+ 
+  // Tests the sameTree method
+ 
+  // Tests the sameData method
+ 
+  // Tests the hasData method
+ 
+  // Tests the exactData method
+ 
+  // Tests the buildList method
+ 
+  // Tests the getRight method
+ 
+  // Tests the compare method
+ 
+  // Tests the checkLeft method
+ 
+  // Tests the filter method
+ 
+  // Tests the map method
+ 
+  // Tests the fold method
+ 
+  // Tests the startsWithJ method
+ 
+  // Tests the endsWithEr method
+ 
+  // tests the apply method
+}

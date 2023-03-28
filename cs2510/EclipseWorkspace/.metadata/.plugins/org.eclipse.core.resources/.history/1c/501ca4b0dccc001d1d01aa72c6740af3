@@ -1,0 +1,87 @@
+import java.util.ArrayList;
+import java.util.Random;
+import tester.Tester;
+import javalib.impworld.*;
+import java.awt.Color;
+import javalib.worldimages.*;
+
+//Represents a single square of the game area
+class Cell {
+  // In logical coordinates, with the origin at the top-left corner of the screen
+  int x;
+  int y;
+  Color color;
+  boolean flooded;
+  // the four adjacent cells to this one
+  Cell left;
+  Cell top;
+  Cell right;
+  Cell bottom;
+
+  public Cell(int x, int y, Color c) {
+    this.x = x;
+    this.y = y;
+    this.color = c;
+  }
+}
+
+class FloodItWorld extends World {
+  // All the cells of the game
+  static int SCREEN_SIZE = 400;
+      
+  @SuppressWarnings("serial")
+  ArrayList<Color> colors = new ArrayList<Color>() {
+    {
+      add(Color.blue);
+      add(Color.green);
+      add(Color.red);
+      add(Color.black);
+      add(Color.orange);
+      add(Color.yellow);
+      add(Color.cyan);
+      add(Color.pink);
+    }
+  };
+
+  ArrayList<ArrayList<Cell>> board;
+
+  WorldImage world;
+
+  public FloodItWorld(int size, int numColors) {
+    board = new ArrayList<ArrayList<Cell>>(size);
+    Random random = new Random();
+    for(int i = 0; i < board.size(); i++) {
+      for (int j = 0; j < board.size(); j++) {
+        Color color = colors.get(random.nextInt(numColors));
+        board.get(i).add(new Cell(i, j, color));
+      }
+    }
+    this.drawWorld();
+  }
+
+  @Override
+  public WorldScene makeScene() {
+    WorldScene background = new WorldScene(SCREEN_SIZE, SCREEN_SIZE);
+    background.placeImageXY(this.world, 0, 0);
+    return background;
+  }
+  
+  
+  public void drawWorld() {
+    WorldImage world = new RectangleImage(0, 0, OutlineMode.SOLID, Color.white);
+    for (ArrayList<Cell> row: this.board) {
+      for (Cell column: row) {
+        world.overlayImages(new RectangleImage(20, 20, OutlineMode.SOLID, column.color));
+      }
+    }
+    this.world = world;
+  }
+}
+
+class ExamplesFloodIt {
+  FloodItWorld starterWorld = new FloodItWorld(5, 4);
+  
+  void testWorld(Tester t) {
+    this.starterWorld.bigBang(FloodItWorld.SCREEN_SIZE, FloodItWorld.SCREEN_SIZE, 1);
+  }
+}

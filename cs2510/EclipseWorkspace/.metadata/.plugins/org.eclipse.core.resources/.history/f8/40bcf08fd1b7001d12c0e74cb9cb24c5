@@ -1,0 +1,429 @@
+import tester.Tester;
+import java.util.Comparator;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+// contains the abstract classes
+/*
+* TEMPLATE:
+* Fields:
+* ... this.order ... -- Comparator<T>
+* Methods:
+* ... this.compare(T t1, T t2) ... -- int
+*/
+abstract class ABST<T> {
+  Comparator<T> order;
+
+  ABST<T> insert(T item) {
+    return new Node<T>(this.order, item, new Leaf<T>(this.order), new Leaf<T>(this.order));
+  }
+
+  boolean present(T item) {
+    return false;
+  }
+
+  T getLeftmost() {
+    throw new RuntimeException("No leftmost item of an empty tree");
+  }
+  
+  T checkLeft(Node<T> that) {
+    return that.data;
+  }
+
+  boolean sameTree(ABST<T> tree) {
+    return true;
+  }
+
+  boolean sameData(ABST<T> tree) {
+    return true;
+  }
+
+  boolean hasData(ABST<T> tree) {
+    return true;
+  }
+
+  boolean exactData(Node<T> that) {
+    return false;
+  }
+  
+  IList<T> buildList() {
+    return new MtList<T>();
+  }
+  
+  ABST<T> getRight() {
+    throw new RuntimeException("No right of an empty tree");
+  }
+
+}
+
+//Will compare the books by title
+class BooksByTitle implements Comparator<Book> {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * Methods:
+   * ... this.compare(Book b1, Book b2) ... -- int
+   */
+  // Will return a positive value if the first book comes
+  // first in alphabetical order, a negative value if b2 comes first
+  // and 0 if the books are the same
+  @Override
+  public int compare(Book b1, Book b2) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * b1 -- Book
+     * b2 -- Book
+     * Fields of Parameters:
+     * b1.title -- String
+     * b1.author -- String
+     * b1.price -- int
+     * b2.title -- String
+     * b2.author -- String
+     * b2.price -- int
+     */
+    return b1.title.compareTo(b2.title);
+  }
+}
+
+// Will compare the books by Author
+class BooksByAuthor implements Comparator<Book> {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * Methods:
+   * ... this.compare(Book b1, Book b2) ... -- int
+   */
+  // Will return a positive value if the first book comes
+  // first in alphabetical order, a negative value if b2 comes first
+  // and 0 if the books are the same
+  @Override
+  public int compare(Book b1, Book b2) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * b1 -- Book
+     * b2 -- Book
+     * Fields of Parameters:
+     * b1.title -- String
+     * b1.author -- String
+     * b1.price -- int
+     * b2.title -- String
+     * b2.author -- String
+     * b2.price -- int
+     */
+    return b1.author.compareTo(b2.author);
+  }
+}
+
+// WIll compare the books by price
+class BooksByPrice implements Comparator<Book> {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * Methods:
+   * ... this.compare(Book b1, Book b2) ... -- int
+   */
+  // Will return a positive value if the first book is more expensive
+  // will return a negative value if the second book is more expensive
+  // will return 0 if the prices are the same
+  @Override
+  public int compare(Book b1, Book b2) {
+    /*
+     * TEMPLATE:
+     * Parameters:
+     * b1 -- Book
+     * b2 -- Book
+     * Fields of Parameters:
+     * b1.title -- String
+     * b1.author -- String
+     * b1.price -- int
+     * b2.title -- String
+     * b2.author -- String
+     * b2.price -- int
+     */
+    if (b1.price > b2.price) {
+      return 1;
+    }
+    else if (b2.price > b1.price) {
+      return -1;
+    }
+    else {
+      return 0;
+    }
+  }
+}
+
+// represents a leaf in a tree of values
+class Leaf<T> extends ABST<T> {
+  Leaf(Comparator<T> order) {
+    super.order = order;
+  }
+}
+
+// represents a node in a tree of values
+class Node<T> extends ABST<T> {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * ... this.data ... -- <T>
+   * ... this.left ... -- ABST
+   * ... this.right ... -- ABST
+   * Methods:
+   */
+  T data;
+  ABST<T> left;
+  ABST<T> right;
+
+// Constructor
+  Node(Comparator<T> order, T data, ABST<T> left, ABST<T> right) {
+    super.order = order;
+    this.data = data;
+    this.left = left;
+    this.right = right;
+  }
+
+  @Override
+  public ABST<T> insert(T item) {
+    if (super.order.compare(this.data, item) > 0) {
+      return new Node<T>(super.order, this.data, this.left, this.right.insert(item));
+    }
+    else if (super.order.compare(this.data, item) < 0) {
+      return new Node<T>(super.order, this.data, this.left.insert(item), this.right);
+    }
+    return new Node<T>(super.order, this.data, this.left,
+        new Node<T>(super.order, item, new Leaf<T>(super.order), this.right));
+  }
+
+  @Override
+  public boolean present(T item) {
+    if (super.order.compare(this.data, item) > 0) {
+      return this.right.present(item);
+    }
+    else if (super.order.compare(this.data, item) < 0) {
+      return this.left.present(item);
+    }
+    return true;
+  }
+  
+  @Override 
+  public T getLeftmost() {
+    return this.left.checkLeft(this);
+  }
+  
+  @Override 
+  public T checkLeft(Node<T> that) {
+    return this.left.checkLeft(this);
+  }
+
+ 
+  @Override
+  public boolean sameTree(ABST<T> tree) {
+    return tree.exactData(this);
+  }
+
+  @Override
+  public boolean exactData(Node<T> that) {
+    return this.data.equals(that.data) && that.left.sameTree(this.left)
+        && that.right.sameTree(this.right);
+  }
+
+  @Override
+  public boolean hasData(ABST<T> tree) {
+    return tree.present(this.data) && this.left.hasData(tree) && this.right.hasData(tree);
+  }
+
+  @Override
+  public boolean sameData(ABST<T> tree) {
+    return this.hasData(tree) && tree.hasData(this);
+  }
+}
+
+// To represent a book
+class Book {
+  /*
+   * TEMPLATE:
+   * Fields:
+   * ... this.title ... -- String
+   * ... this.author ... -- String
+   * ... this.price ... -- int
+   * Methods:
+   */
+  String title;
+  String author;
+  int price;
+
+  Book(String title, String author, int price) {
+    this.title = title;
+    this.author = author;
+    this.price = price;
+  }
+}
+
+//Represents a list of any
+interface IList<T> {
+
+// Filters to a list based off the predicate
+  IList<T> filter(Predicate<T> pred);
+
+// This applies the converter to each element of the list
+  <U> IList<U> map(Function<T, U> converter);
+
+// This applies a function to all the items in the list to combine
+// them all into one value
+  <U> U fold(BiFunction<T, U, U> converter, U initial);
+}
+
+//Represents the predicate for starting with J
+class StartsWithJ implements Predicate<String> {
+  public boolean test(String str) {
+    return str.substring(0, 1).equals("J");
+  }
+}
+
+//Represents the predicate for ending with 'er'
+class EndsWithEr implements Predicate<String> {
+  public boolean test(String str) {
+    return str.substring(str.length() - 2, str.length()).equals("er");
+  }
+}
+
+//Represents the function that returns the first three of a string
+class FirstThree implements Function<String, String> {
+  public String apply(String str) {
+    return str.substring(0, 3);
+  }
+}
+
+//Represents the empty list
+class MtList<T> implements IList<T> {
+  /*
+   * TEMPLATE:
+   * FIELDS:
+   * METHODS:
+   * ... this.filter(Predicate<T> pred) ... -- IList<T>
+   * ... this.map(Function<T, U> converter) ... -- IList<T>
+   * ... this.fold(BiFunction<T,U,U> converter, U initial ... -- <U>
+   */
+
+  MtList() {
+  }
+
+  /*
+   * TEMPLATE:
+   * Parameters:
+   * ... pred ... -- Predicate<T>
+   * Methods of Parameters:
+   * pred.test -- boolean
+   */
+  @Override
+  public IList<T> filter(Predicate<T> pred) {
+    // TODO Auto-generated method stub
+    return new MtList<T>();
+  }
+
+  /*
+   * TEMPLATE:
+   * Parameters:
+   * ... converter ... -- Function<T, U>
+   * Methods of Parameters:
+   * converter.apply -- <U>
+   */
+  @Override
+  public <U> IList<U> map(Function<T, U> converter) {
+    // TODO Auto-generated method stub
+    return new MtList<U>();
+  }
+
+  /*
+   * TEMPLATE:
+   * Parameters:
+   * ... converter ... -- Function<T, U>
+   * ... initial ... -- U
+   * Methods of Parameters:
+   * converter.apply -- <U>
+   */
+  @Override
+  public <U> U fold(BiFunction<T, U, U> converter, U initial) {
+    // TODO Auto-generated method stub
+    return initial;
+  }
+}
+
+//Represents the list that contains items
+class ConsList<T> implements IList<T> {
+  /*
+   * TEMPLATE:
+   * FIELDS:
+   * this.first -- T
+   * this.rest -- IList<T>
+   * METHODS:
+   * ... this.filter(Predicate<T> pred) ... -- IList<T>
+   * ... this.map(Function<T, U> converter) ... -- IList<T>
+   * ... this.fold(BiFunction<T,U,U> converter, U initial ... -- <U>
+   * Methods of fields:
+   * ... rest.filter(Predicate<T> pred) ... -- IList<T>
+   * ... rest.map(Function<T, U> converter) ... -- IList<T>
+   * ... rest.fold(BiFunction<T,U,U> converter, U initial ... -- <U>
+   */
+  T first;
+  IList<T> rest;
+
+  ConsList(T first, IList<T> rest) {
+    this.first = first;
+    this.rest = rest;
+  }
+
+  /*
+   * TEMPLATE:
+   * Parameters:
+   * ... pred ... -- Predicate<T>
+   * Methods of Parameters:
+   * pred.test -- boolean
+   */
+  @Override
+  public IList<T> filter(Predicate<T> pred) {
+    // TODO Auto-generated method stub
+    if (pred.test(this.first)) {
+      return new ConsList<T>(this.first, this.rest.filter(pred));
+    }
+    else {
+      return this.rest.filter(pred);
+    }
+  }
+
+  /*
+   * TEMPLATE:
+   * Parameters:
+   * ... converter ... -- Function<T, U>
+   * Methods of Parameters:
+   * converter.apply -- <U>
+   */
+  @Override
+  public <U> IList<U> map(Function<T, U> converter) {
+    // TODO Auto-generated method stub
+    return new ConsList<U>(converter.apply(this.first), this.rest.map(converter));
+  }
+
+  /*
+   * TEMPLATE:
+   * Parameters:
+   * ... converter ... -- Function<T, U>
+   * ... initial ... -- U
+   * Methods of Parameters:
+   * converter.apply -- <U>
+   */
+  @Override
+  public <U> U fold(BiFunction<T, U, U> converter, U initial) {
+    // TODO Auto-generated method stub
+    return converter.apply(this.first, this.rest.fold(converter, initial));
+  }
+}
+
+// Representing the examples
+class ExamplesBST {
+// Constructor
+  ExamplesBST() {
+  }
+}
