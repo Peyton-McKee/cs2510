@@ -29,27 +29,34 @@ class Cell {
         OutlineMode.SOLID, this.color);
   }
 
-  public ArrayList<Cell> floodNeighborsWithColor(Color c) {
-    this.color = c;
+  public ArrayList<Cell> floodNeighborsWithColor(Color c, ArrayList<Cell> seen) {
     ArrayList<Cell> neighborsWithSameColor = new ArrayList<Cell>(4);
-    if (this.left != null && this.left.isColor(c)) {
-      neighborsWithSameColor.add(this.left);
-    }
-    if (this.right != null && this.right.isColor(c)) {
-      neighborsWithSameColor.add(this.right);
-    }
-    if (this.top != null && this.top.isColor(c)) {
-      neighborsWithSameColor.add(this.top);
-    }
-    if (this.bottom != null && this.bottom.isColor(c)) {
-      System.out.println("bottom Check");
-      neighborsWithSameColor.add(this.bottom);
-    }
+    
+    this.floodNeighborsForCell(this.left, c, seen, neighborsWithSameColor);
+    this.floodNeighborsForCell(this.right, c, seen, neighborsWithSameColor);
+    this.floodNeighborsForCell(this.bottom, c, seen, neighborsWithSameColor);
+    this.floodNeighborsForCell(this.top, c, seen, neighborsWithSameColor);
+
     return neighborsWithSameColor;
+  }
+
+  private void floodNeighborsForCell(Cell cell, Color c, ArrayList<Cell> seen,
+      ArrayList<Cell> neighborsWithSameColor) {
+    if (cell != null && cell.isColor(c) && !seen.contains(cell)) {
+      neighborsWithSameColor.add(cell);
+      seen.addAll(neighborsWithSameColor);
+      for (Cell cellInstance : cell.floodNeighborsWithColor(c, seen)) {
+        neighborsWithSameColor.add(cellInstance);
+      }
+    }
   }
 
   private boolean isColor(Color c) {
     return this.color.equals(c);
+  }
+  
+  public void setColor(Color c) {
+    this.color = c;
   }
 }
 
@@ -73,39 +80,16 @@ class FloodItWorld extends World {
   };
   int attempts;
   ArrayList<Cell> flooded;
+  ArrayList<Cell> waterfalled;
   ArrayList<Cell> board;
   WorldImage world;
+  
+  boolean isFlooding = false;
+  
+  Color selectedColor; 
 
   public FloodItWorld(int size, int numColors) {
     this.makeBoard(size, numColors);
-  }
-
-  private void makeBoard(int size, int numColors) {
-    CELL_SIZE = (SCREEN_SIZE / size) * 2;
-    this.board = new ArrayList<Cell>(size * size);
-    this.attempts = size * numColors;
-    this.flooded = new ArrayList<Cell>(size * size);
-    Random random = new Random();
-    for (int i = 0; i < size; i++) {
-      for (int j = 0; j < size; j++) {
-        Color color = colors.get(random.nextInt(numColors));
-        Cell newCell = new Cell(j * CELL_SIZE, i * CELL_SIZE, color);
-        if (i != 0) {
-          System.out.println("Adding top and bottom cells");
-          Cell top = this.board.get((i * size) - size + j);
-          newCell.top = top;
-          top.bottom = newCell;
-        }
-        if (j != 0) {
-          Cell left = this.board.get(i * size + j - 1);
-          newCell.left = left;
-          left.right = newCell;
-        }
-        this.board.add(newCell);
-      }
-    }
-    this.flooded.add(this.board.get(0));
-    this.drawWorld();
   }
 
   @Override
@@ -124,18 +108,77 @@ class FloodItWorld extends World {
 
   @Override
   public void onMouseClicked(Posn p) {
-    Color c = this.flooded.get(0).color;
-    for (Cell cell : this.board) {
-      if (Math.abs(cell.x - (p.x * 2)) <= CELL_SIZE && Math.abs(cell.y - (p.y * 2)) <= CELL_SIZE) {
-        c = cell.color;
-        break;
+    if (!this.isFlooding) {
+      Color c = this.flooded.get(0).color;
+      for (Cell cell : this.board) {
+        if (Math.abs(cell.x - (p.x * 2)) <= CELL_SIZE && Math.abs(cell.y - (p.y * 2)) <= CELL_SIZE) {
+          c = cell.color;
+          break;
+        }
       }
+      this.selectedColor = c;
+      this.floodWithColor(c);
+      this.isFlooding = true;
     }
-    this.floodWithColor(c);
   }
 
   @Override
   public void onTick() {
+    if (this.isFlooding) {
+      ArrayList<Cell> temp = new ArrayList<Cell>(this.waterfalled);
+      for (Cell cell: temp) {
+        this.waterfallCell(cell);
+      }
+      if (this.waterfalled.size() == this.flooded.size()) {
+        this.isFlooding = false;
+        this.waterfalled = new ArrayList<Cell>(this.flooded.size());
+      }
+    }
+    this.drawWorld();
+  }
+  
+  private void waterfallCell(Cell cell) {
+    cell.color = this.selectedColor;
+    this.setColorIfFlooded(cell.left);
+    this.setColorIfFlooded(cell.right);
+    this.setColorIfFlooded(cell.top);
+    this.setColorIfFlooded(cell.bottom);
+  }
+  
+  private void setColorIfFlooded(Cell cell) {
+    if (this.flooded.contains(cell) && !this.waterfalled.contains(cell)) {
+      cell.setColor(this.selectedColor);
+      this.waterfalled.add(cell);
+    }
+  }
+  
+  private void makeBoard(int size, int numColors) {
+    CELL_SIZE = (SCREEN_SIZE / size) * 2;
+    this.board = new ArrayList<Cell>(size * size);
+    this.attempts = size * numColors;
+    this.flooded = new ArrayList<Cell>(size * size);
+    this.waterfalled = new ArrayList<Cell>(size * size);
+    Random random = new Random();
+    for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
+        Color color = colors.get(random.nextInt(numColors));
+        Cell newCell = new Cell(j * CELL_SIZE, i * CELL_SIZE, color);
+        if (i != 0) {
+          Cell top = this.board.get((i * size) - size + j);
+          newCell.top = top;
+          top.bottom = newCell;
+        }
+        if (j != 0) {
+          Cell left = this.board.get(i * size + j - 1);
+          newCell.left = left;
+          left.right = newCell;
+        }
+        this.board.add(newCell);
+      }
+    }
+    Cell topLeft = this.board.get(0);
+    this.flooded.add(topLeft);
+    this.selectedColor = topLeft.color;
     this.drawWorld();
   }
 
@@ -143,15 +186,15 @@ class FloodItWorld extends World {
     if (this.flooded.get(0).color.equals(c)) {
       return;
     }
+    ArrayList<Cell> seen = new ArrayList<Cell>(this.flooded);
     ArrayList<Cell> temp = new ArrayList<Cell>(this.flooded);
     for (Cell cell : this.flooded) {
-      for (Cell neighbor : cell.floodNeighborsWithColor(c)) {
-        System.out.println("Adding cell to flood");
+      for (Cell neighbor : cell.floodNeighborsWithColor(c, seen)) {
         temp.add(neighbor);
       }
     }
     this.flooded = filterUnique(temp);
-    System.out.println(this.flooded);
+    this.waterfalled.add(this.flooded.get(0));
   }
 
   private ArrayList<Cell> filterUnique(ArrayList<Cell> arr) {
