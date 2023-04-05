@@ -31,7 +31,7 @@ class Cell {
 
   public ArrayList<Cell> floodNeighborsWithColor(Color c, ArrayList<Cell> seen) {
     ArrayList<Cell> neighborsWithSameColor = new ArrayList<Cell>(4);
-    
+
     this.floodNeighborsForCell(this.left, c, seen, neighborsWithSameColor);
     this.floodNeighborsForCell(this.right, c, seen, neighborsWithSameColor);
     this.floodNeighborsForCell(this.bottom, c, seen, neighborsWithSameColor);
@@ -54,7 +54,7 @@ class Cell {
   private boolean isColor(Color c) {
     return this.color.equals(c);
   }
-  
+
   public void setColor(Color c) {
     this.color = c;
   }
@@ -79,14 +79,16 @@ class FloodItWorld extends World {
     }
   };
   int attempts;
+  int currAttempts;
   ArrayList<Cell> flooded;
   ArrayList<Cell> waterfalled;
   ArrayList<Cell> board;
   WorldImage world;
-  
-  boolean isFlooding = false;
-  
-  Color selectedColor; 
+
+  boolean isFlooding;
+  boolean isOver;
+
+  Color selectedColor;
 
   public FloodItWorld(int size, int numColors) {
     this.makeBoard(size, numColors);
@@ -96,6 +98,15 @@ class FloodItWorld extends World {
   public WorldScene makeScene() {
     WorldScene background = new WorldScene(SCREEN_SIZE, SCREEN_SIZE);
     background.placeImageXY(this.world, 0, 0);
+    if (this.isOver) {
+      if (this.flooded.size() == this.board.size()) {
+        background.placeImageXY(new TextImage("You won in " + this.currAttempts + " attempts!", 24,
+            FontStyle.BOLD, Color.RED), SCREEN_SIZE/2, SCREEN_SIZE/2);
+      }
+      else {
+        background.placeImageXY(new TextImage("YOU LOSE", 24,
+            FontStyle.BOLD, Color.RED), SCREEN_SIZE/2, SCREEN_SIZE/2);      }
+    }
     return background;
   }
 
@@ -111,14 +122,19 @@ class FloodItWorld extends World {
     if (!this.isFlooding) {
       Color c = this.flooded.get(0).color;
       for (Cell cell : this.board) {
-        if (Math.abs(cell.x - (p.x * 2)) <= CELL_SIZE && Math.abs(cell.y - (p.y * 2)) <= CELL_SIZE) {
+        if (Math.abs(cell.x - (p.x * 2)) <= CELL_SIZE
+            && Math.abs(cell.y - (p.y * 2)) <= CELL_SIZE) {
           c = cell.color;
           break;
         }
       }
+      if (this.selectedColor == c) {
+        return;
+      }
       this.selectedColor = c;
       this.floodWithColor(c);
       this.isFlooding = true;
+      this.currAttempts++;
     }
   }
 
@@ -126,7 +142,7 @@ class FloodItWorld extends World {
   public void onTick() {
     if (this.isFlooding) {
       ArrayList<Cell> temp = new ArrayList<Cell>(this.waterfalled);
-      for (Cell cell: temp) {
+      for (Cell cell : temp) {
         this.waterfallCell(cell);
       }
       if (this.waterfalled.size() == this.flooded.size()) {
@@ -134,9 +150,13 @@ class FloodItWorld extends World {
         this.waterfalled = new ArrayList<Cell>(this.flooded.size());
       }
     }
+    if (!isFlooding
+        && ((this.currAttempts >= this.attempts) || (this.flooded.size() == this.board.size()))) {
+      this.isOver = true;
+    }
     this.drawWorld();
   }
-  
+
   private void waterfallCell(Cell cell) {
     cell.color = this.selectedColor;
     this.setColorIfFlooded(cell.left);
@@ -144,20 +164,23 @@ class FloodItWorld extends World {
     this.setColorIfFlooded(cell.top);
     this.setColorIfFlooded(cell.bottom);
   }
-  
+
   private void setColorIfFlooded(Cell cell) {
     if (this.flooded.contains(cell) && !this.waterfalled.contains(cell)) {
       cell.setColor(this.selectedColor);
       this.waterfalled.add(cell);
     }
   }
-  
+
   private void makeBoard(int size, int numColors) {
     CELL_SIZE = (SCREEN_SIZE / size) * 2;
     this.board = new ArrayList<Cell>(size * size);
-    this.attempts = size * numColors;
+    this.attempts = (size + numColors);
+    this.currAttempts = 0;
     this.flooded = new ArrayList<Cell>(size * size);
     this.waterfalled = new ArrayList<Cell>(size * size);
+    this.isOver = false;
+    this.isFlooding = false;
     Random random = new Random();
     for (int i = 0; i < size; i++) {
       for (int j = 0; j < size; j++) {
