@@ -3,6 +3,7 @@ import tester.*;
 import javalib.impworld.*;
 import java.awt.Color;
 import javalib.worldimages.*;
+import java.util.Random;
 
 class Node<T> {
   T value;
@@ -20,6 +21,10 @@ class Node<T> {
   
   public void addEdge(DirectedEdge<T> edge) {
     this.edges.add(edge);
+  }
+  
+  public void removeEdge(DirectedEdge<T> edge) {
+    this.edges.remove(edge);
   }
   
   public WorldImage draw() {
@@ -62,6 +67,10 @@ class EdgeWeightedGraph<T> {
     }
     return img;
   }
+  
+  Node<T> get(int index) {
+    return this.nodes.get(index);
+  }
 }
 
 class Maze extends World {
@@ -69,23 +78,35 @@ class Maze extends World {
   static int NODE_SIZE;
   static int SCREEN_SIZE = 500;
   EdgeWeightedGraph<Integer> world = new EdgeWeightedGraph<Integer>();
+  Random rand = new Random();
   
   public Maze(int dimX, int dimY) {
     NODE_SIZE = (SCREEN_SIZE * 2) / Math.max(dimX, dimY);
     for (int i = 0; i < dimX; i++) {
       for (int j = 0; j < dimY; j++) {
         Color c = Color.gray;
-        
+
         if (i == 0 && j == 0) {
           c = Color.green;
         }
-        else if (i == dimX - 1 && j == dimY - 1f) {
+        else if (i == dimX - 1 && j == dimY - 1) {
           c = Color.pink;
         }
-        world.addNode(new Node<Integer>(((i * dimY) + j), i * NODE_SIZE, j * NODE_SIZE, c));
+
+        Node<Integer> newNode = new Node<Integer>(((i * dimY) + j), i * NODE_SIZE, j * NODE_SIZE, c);
+        this.world.addNode(newNode);
+
+        if (i != 0) {
+          Node<Integer> top = this.world.get((i * dimY) - dimY + j);
+          this.world.addEdge(top, newNode, rand.nextInt(100));
+        } else if (j != 0) {
+          Node<Integer> left = this.world.get(i * dimY + j - 1);
+          this.world.addEdge(newNode, left, rand.nextInt(100));
+        }
       }
     }
   }
+
   @Override
   public WorldScene makeScene() {
     WorldScene background = new WorldScene(SCREEN_SIZE, SCREEN_SIZE);
