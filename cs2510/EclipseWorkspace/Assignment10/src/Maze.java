@@ -122,7 +122,7 @@ class Maze extends World {
 
         if (i != 0) {
           Node<Integer> top = this.world.get((i * dimX) - dimX + j);
-          this.world.addEdge(top, newNode, rand.nextInt());
+          this.world.addEdge(newNode, top, rand.nextInt());
         }
         if (j != 0) {
           Node<Integer> left = this.world.get(i * dimX + j - 1);
@@ -145,14 +145,14 @@ class Maze extends World {
 
         if (col < this.dimX - 1
             && !this.world.edgeExistsFor(node, this.world.nodes.get(row * dimX + col + 1))) {
-          background.placeImageXY(new RectangleImage(1, NODE_SIZE, OutlineMode.SOLID, Color.red),
-              x, y + NODE_SIZE / 2);
+          background.placeImageXY(new RectangleImage(NODE_SIZE, 1, OutlineMode.SOLID, Color.red),
+              x + NODE_SIZE / 2, y + NODE_SIZE);
         }
 
         if (row < this.dimY - 1
-            && !this.world.edgeExistsFor(node, this.world.nodes.get(row * dimX + 1 + col))) {
-          background.placeImageXY(new RectangleImage(NODE_SIZE, 1, OutlineMode.SOLID, Color.red),
-              x  + NODE_SIZE / 2, y);
+            && !this.world.edgeExistsFor(node, this.world.nodes.get(row * dimX + col + dimX))) {
+          background.placeImageXY(new RectangleImage(1, NODE_SIZE, OutlineMode.SOLID, Color.red), x + NODE_SIZE,
+              y + NODE_SIZE / 2);
         }
       }
     }
@@ -170,36 +170,31 @@ class Maze extends World {
   }
 
   ArrayList<DirectedEdge<Integer>> makeMaze() {
-    HashMap<Integer, Integer> representatives = new HashMap<Integer, Integer>();
+    HashMap<Node<Integer>, Node<Integer>> representatives = new HashMap<Node<Integer>, Node<Integer>>();
     ArrayList<DirectedEdge<Integer>> edgesInTree = new ArrayList<DirectedEdge<Integer>>();
     ArrayList<DirectedEdge<Integer>> worklist = new ArrayList<DirectedEdge<Integer>>(
         this.world.edges);
     worklist.sort(new WeightComparator());
-    for (Node<Integer> node : this.world.nodes) {
-      representatives.put(node.value, node.value);
-    }
     System.out.println(worklist.size());
-    while (edgesInTree.size() < this.dimX * this.dimY - 1) {
-      DirectedEdge<Integer> nextEdge = worklist.get(0);
-      
-      if (this.findRepresentative(representatives,
-          representatives.get(nextEdge.src.value)) == this.findRepresentative(representatives,
-              representatives.get(nextEdge.dest.value))) {
-        worklist.remove(nextEdge);
-      } else 
-//        System.out.println("test2");
-//        System.out.println(this.findRepresentative(representatives, nextEdge.src.value));
-//        System.out.println(representatives.get(nextEdge.src.value));
-//        System.out.println(this.findRepresentative(representatives, nextEdge.dest.value));
+    for (Node<Integer> node : this.world.nodes) {
+      representatives.put(node, node);
+    }
+    while (!worklist.isEmpty()) {
+      DirectedEdge<Integer> nextEdge = worklist.remove(0);
+
+      if (this.findRepresentative(representatives, representatives.get(nextEdge.src)) != this
+          .findRepresentative(representatives, representatives.get(nextEdge.dest))) {
         edgesInTree.add(nextEdge);
-        representatives.put(this.findRepresentative(representatives, nextEdge.dest.value),
-            this.findRepresentative(representatives, nextEdge.src.value));
+        representatives.put(this.findRepresentative(representatives, nextEdge.src),
+            this.findRepresentative(representatives, nextEdge.dest));
       }
+    }
     System.out.println(edgesInTree.size());
     return edgesInTree;
   }
 
-  int findRepresentative(HashMap<Integer, Integer> representatives, int start) {
+  Node<Integer> findRepresentative(HashMap<Node<Integer>, Node<Integer>> representatives,
+      Node<Integer> start) {
     while (!(representatives.get(start) == start)) {
       start = representatives.get(start);
     }
