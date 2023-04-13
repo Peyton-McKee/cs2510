@@ -29,8 +29,7 @@ class Node<T> {
 //  }
 
   public WorldImage draw() {
-    return new RectangleImage(this.x + Maze.NODE_SIZE, this.y + Maze.NODE_SIZE, OutlineMode.SOLID,
-        this.c);
+    return new RectangleImage(Maze.NODE_SIZE, Maze.NODE_SIZE, OutlineMode.SOLID, this.c);
   }
 
   public void setColor(Color c) {
@@ -50,10 +49,20 @@ class DirectedEdge<T> {
   }
 
   public WorldImage draw() {
-//    System.out.println(this.dest.x);
-//    System.out.println(this.dest.y);
-    return new RectangleImage(this.src.x, this.src.y, OutlineMode.OUTLINE,
-        Color.red);
+    if (this.src.x == this.dest.x) {
+      return this.drawHorizontalEdge();
+    }
+    else {
+      return this.drawVerticalEdge();
+    }
+  }
+
+  public WorldImage drawVerticalEdge() {
+    return new RectangleImage(1, Maze.NODE_SIZE, OutlineMode.OUTLINE, Color.red);
+  }
+
+  public WorldImage drawHorizontalEdge() {
+    return new RectangleImage(Maze.NODE_SIZE, 1, OutlineMode.OUTLINE, Color.red);
   }
 }
 
@@ -66,25 +75,21 @@ class EdgeWeightedGraph<T> {
   }
 
   void addEdge(Node<T> src, Node<T> destination, int weight) {
-    DirectedEdge<T> edge = new DirectedEdge<T>(src, destination, weight);
-    DirectedEdge<T> edge2 = new DirectedEdge<T>(destination, src, weight);
+    DirectedEdge<T> edge = new DirectedEdge<T>(destination, src, weight);
     this.edges.add(edge);
-    this.edges.add(edge2);
-  }
-
-  WorldImage draw() {
-    WorldImage img = new RectangleImage(0, 0, OutlineMode.OUTLINE, Color.white);
-    for (Node<T> node : nodes) {
-      img = new OverlayImage(img, node.draw());
-    }
-    for (DirectedEdge<T> edge : edges) {
-      img = new OverlayImage(edge.draw(), img);
-    }
-    return img;
   }
 
   Node<T> get(int index) {
     return this.nodes.get(index);
+  }
+
+  boolean edgeExistsFor(Node<T> node1, Node<T> node2) {
+    for (DirectedEdge<T> edge : this.edges) {
+      if (edge.src.value == node1.value && edge.dest.value == node2.value) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
@@ -94,31 +99,34 @@ class Maze extends World {
   static int SCREEN_SIZE = 500;
   EdgeWeightedGraph<Integer> world = new EdgeWeightedGraph<Integer>();
   Random rand = new Random();
+  int dimX;
+  int dimY;
 
   public Maze(int dimX, int dimY) {
-    NODE_SIZE = (SCREEN_SIZE * 2) / Math.max(dimX, dimY);
-    for (int i = 0; i < dimX; i++) {
-      for (int j = 0; j < dimY; j++) {
+    this.dimX = dimX;
+    this.dimY = dimY;
+    NODE_SIZE = (SCREEN_SIZE) / Math.max(dimX, dimY);
+    for (int i = 0; i < dimY; i++) {
+      for (int j = 0; j < dimX; j++) {
         Color c = Color.gray;
 
         if (i == 0 && j == 0) {
           c = Color.green;
         }
-        else if (i == dimX - 1 && j == dimY - 1) {
+        else if (i == dimY - 1 && j == dimX - 1) {
           c = Color.pink;
         }
 
-        Node<Integer> newNode = new Node<Integer>(((i * dimY) + j), i * NODE_SIZE, j * NODE_SIZE,
-            c);
+        Node<Integer> newNode = new Node<Integer>(((i * dimX) + j), i, j, c);
         this.world.addNode(newNode);
 
         if (i != 0) {
-          Node<Integer> top = this.world.get((i * dimY) - dimY + j);
-          this.world.addEdge(top, newNode, rand.nextInt(100));
+          Node<Integer> top = this.world.get((i * dimX) - dimX + j);
+          this.world.addEdge(top, newNode, rand.nextInt());
         }
-        else if (j != 0) {
-          Node<Integer> left = this.world.get(i * dimY + j - 1);
-          this.world.addEdge(newNode, left, rand.nextInt(100));
+        if (j != 0) {
+          Node<Integer> left = this.world.get(i * dimX + j - 1);
+          this.world.addEdge(newNode, left, rand.nextInt());
         }
       }
     }
@@ -128,7 +136,26 @@ class Maze extends World {
   @Override
   public WorldScene makeScene() {
     WorldScene background = new WorldScene(SCREEN_SIZE, SCREEN_SIZE);
-    background.placeImageXY(this.world.draw(), 0, 0);
+    for (int row = 0; row < this.dimY; row++) {
+      for (int col = 0; col < this.dimX; col++) {
+        Node<Integer> node = this.world.nodes.get(row * dimX + col);
+        int x = node.x * NODE_SIZE;
+        int y = node.y * NODE_SIZE;
+        background.placeImageXY(node.draw(), x + NODE_SIZE / 2, y + NODE_SIZE / 2);
+
+        if (col < this.dimX - 1
+            && !this.world.edgeExistsFor(node, this.world.nodes.get(row * dimX + col + 1))) {
+          background.placeImageXY(new RectangleImage(1, NODE_SIZE, OutlineMode.SOLID, Color.red),
+              x, y + NODE_SIZE / 2);
+        }
+
+        if (row < this.dimY - 1
+            && !this.world.edgeExistsFor(node, this.world.nodes.get(row * dimX + 1 + col))) {
+          background.placeImageXY(new RectangleImage(NODE_SIZE, 1, OutlineMode.SOLID, Color.red),
+              x  + NODE_SIZE / 2, y);
+        }
+      }
+    }
     return background;
   }
 
@@ -151,57 +178,40 @@ class Maze extends World {
     for (Node<Integer> node : this.world.nodes) {
       representatives.put(node.value, node.value);
     }
-    while (this.existsDifferentRepresentatives(representatives) && !worklist.isEmpty()) {
+    System.out.println(worklist.size());
+    while (edgesInTree.size() < this.dimX * this.dimY - 1) {
       DirectedEdge<Integer> nextEdge = worklist.get(0);
-      if (this.findRepresentative(representatives, representatives.get(nextEdge.src.value)) == this
-          .findRepresentative(representatives, representatives.get(nextEdge.dest.value))) {
+      
+      if (this.findRepresentative(representatives,
+          representatives.get(nextEdge.src.value)) == this.findRepresentative(representatives,
+              representatives.get(nextEdge.dest.value))) {
         worklist.remove(nextEdge);
-      }
-      else {
+      } else 
 //        System.out.println("test2");
 //        System.out.println(this.findRepresentative(representatives, nextEdge.src.value));
 //        System.out.println(representatives.get(nextEdge.src.value));
 //        System.out.println(this.findRepresentative(representatives, nextEdge.dest.value));
         edgesInTree.add(nextEdge);
-        representatives.put(this.findRepresentative(representatives, nextEdge.src.value),
-            this.findRepresentative(representatives, nextEdge.dest.value));
+        representatives.put(this.findRepresentative(representatives, nextEdge.dest.value),
+            this.findRepresentative(representatives, nextEdge.src.value));
       }
-    }
+    System.out.println(edgesInTree.size());
     return edgesInTree;
   }
 
-  boolean existsDifferentRepresentatives(HashMap<Integer, Integer> representatives) {
-    int firstRep = representatives.get(0);
-    for (int rep : representatives.values()) {
-      if (rep != firstRep) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   int findRepresentative(HashMap<Integer, Integer> representatives, int start) {
-    if (representatives.get(start) == start) {
-      return start;
+    while (!(representatives.get(start) == start)) {
+      start = representatives.get(start);
     }
-    return this.findRepresentative(representatives, representatives.get(start));
+    return start;
   }
 }
 
 class WeightComparator implements Comparator<DirectedEdge<Integer>> {
-
   @Override
   public int compare(DirectedEdge<Integer> o1, DirectedEdge<Integer> o2) {
-    // TODO Auto-generated method stub
-    if (o1.weight > o2.weight) {
-      return 1;
-    }
-    if (o2.weight > o1.weight) {
-      return -1;
-    }
-    return 0;
+    return Integer.compare(o1.weight, o2.weight);
   }
-
 }
 
 class ExamplesMaze {
