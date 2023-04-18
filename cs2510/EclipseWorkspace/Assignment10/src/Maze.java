@@ -317,11 +317,11 @@ class EdgeWeightedGraph<T> {
   void addNode(Node<T> node) {
     this.nodes.add(node);
   }
-  
+
   Node<T> getFirst() {
     return this.nodes.get(0);
   }
-  
+
   Node<T> getLast() {
     return this.nodes.get(this.nodes.size() - 1);
   }
@@ -423,11 +423,13 @@ class Maze extends World {
   public void onTick() {
     if (this.displayingSolution) {
       if (this.waterfall.size() == 0) {
-        for (Node<Integer> node : reconstruct(this.world.getLast(), this.solution, this.world.getFirst())) {
+        for (Node<Integer> node : reconstruct(this.world.getLast(), this.solution,
+            this.world.getFirst())) {
           node.setColor(Color.blue);
         }
         this.displayingSolution = false;
-      } else {
+      }
+      else {
         this.waterfall.remove(0).setColor(Color.cyan);
       }
     }
@@ -454,7 +456,7 @@ class Maze extends World {
     this.solution = this.search(from, to, collection);
     this.displayingSolution = true;
   }
-  
+
   void init(int dimX, int dimY) {
     this.dimX = dimX;
     this.dimY = dimY;
@@ -610,8 +612,8 @@ class ExamplesMaze {
     this.node5 = new Node<String>("tester", 4, 10, Color.cyan);
     this.edgeWeightedGraph = new EdgeWeightedGraph<Integer>();
     this.expectedDirectedEdge1 = new DirectedEdge<Integer>(this.node1, this.node3, 10);
-    this.expectedDirectedEdge2 = new DirectedEdge<Integer>(this.node3, this.node1, 4);
-    this.expectedDirectedEdge3 = new DirectedEdge<Integer>(this.node4, this.node3, 25);
+    this.expectedDirectedEdge2 = new DirectedEdge<Integer>(this.node1, this.node3, 4);
+    this.expectedDirectedEdge3 = new DirectedEdge<Integer>(this.node3, this.node4, 25);
     this.directedEdge = new DirectedEdge<String>(this.node2, this.node5, 40);
     this.hash = new HashMap<Node<Integer>, Node<Integer>>();
     this.hash.put(this.node1, this.node3);
@@ -696,7 +698,7 @@ class ExamplesMaze {
     t.checkExpect(this.edgeWeightedGraph.getTotalEdges().get(1), this.expectedDirectedEdge1);
     this.edgeWeightedGraph.addNode(this.node4);
     this.edgeWeightedGraph.addEdge(this.node3, this.node4, 25);
-    t.checkExpect(this.edgeWeightedGraph.getTotalEdges().get(2), this.expectedDirectedEdge3);
+    t.checkExpect(this.edgeWeightedGraph.getTotalEdges().get(4), this.expectedDirectedEdge3);
   }
 
   // tests the get method
@@ -717,7 +719,7 @@ class ExamplesMaze {
     this.edgeWeightedGraph.addNode(this.node1);
     this.edgeWeightedGraph.addNode(this.node3);
     this.edgeWeightedGraph.addEdge(this.node1, this.node3, 4);
-    t.checkExpect(this.edgeWeightedGraph.edgeExistsFor(this.node1, this.node3), false);
+    t.checkExpect(this.edgeWeightedGraph.edgeExistsFor(this.node1, this.node3), true);
     t.checkExpect(this.edgeWeightedGraph.edgeExistsFor(this.node3, this.node1), true);
     t.checkExpect(this.edgeWeightedGraph.edgeExistsFor(this.node1, this.node4), false);
     this.edgeWeightedGraph.addNode(this.node4);
@@ -730,8 +732,8 @@ class ExamplesMaze {
   void testMakeScene(Tester t) {
     this.init();
     this.testingMaze.makeScene();
-    t.checkExpect(this.testingMaze.world.getTotalEdges().size(), 80);
-    t.checkExpect(this.testingMaze2.world.getTotalEdges().size(), 19);
+    t.checkExpect(this.testingMaze.world.getTotalEdges().size(), 160);
+    t.checkExpect(this.testingMaze2.world.getTotalEdges().size(), 38);
     t.checkExpect(this.testingMaze.world.nodes.size(), 81);
     t.checkExpect(this.testingMaze2.world.nodes.size(), 20);
   }
@@ -768,4 +770,114 @@ class ExamplesMaze {
         new WeightComparator().compare(this.expectedDirectedEdge3, this.expectedDirectedEdge2), 1);
   }
 
+  Deque<String> deque1 = new Deque<String>();
+  Deque<String> deque2 = new Deque<String>();
+  Deque<Integer> deque3 = new Deque<Integer>();
+  Deque<Integer> deque4 = new Deque<Integer>();
+  ANode<String> testNode1 = new Vertex<String>("testing");
+  ANode<String> testNode2 = new Vertex<String>("testing2");
+  ANode<String> sentinelNode = new Sentinel<String>();
+  // Constructor
+
+  // Reset method to make sure the pre-test is predictable
+  void reset() {
+    this.deque1 = new Deque<String>();
+    this.deque2 = new Deque<String>();
+    this.deque3 = new Deque<Integer>();
+    this.deque4 = new Deque<Integer>();
+    this.testNode1 = new Vertex<String>("testing");
+    this.testNode2 = new Vertex<String>("testing2");
+    this.sentinelNode = new Sentinel<String>();
+    new Vertex<String>("abc",
+        new Vertex<String>("bcd", new Vertex<String>("cde",
+            new Vertex<String>("def", this.deque2.header, this.deque2.header), this.deque2.header),
+            this.deque2.header),
+        this.deque2.header);
+    new Vertex<Integer>(420,
+        new Vertex<Integer>(69, new Vertex<Integer>(7,
+            new Vertex<Integer>(560, this.deque3.header, this.deque3.header), this.deque3.header),
+            this.deque3.header),
+        this.deque3.header);
+    new Vertex<Integer>(21, new Vertex<Integer>(2,
+        new Vertex<Integer>(635, this.deque4.header, this.deque4.header), this.deque4.header),
+        this.deque4.header);
+  }
+
+  // tests the updatePrevious method
+  void testUpdatePrevious(Tester t) {
+    this.reset();
+    t.checkExpect(this.testNode1.prev, null);
+    this.testNode1.updatePrevious(this.testNode2);
+    t.checkExpect(this.testNode1.prev, this.testNode2);
+  }
+
+  // tests the updateNext method
+  void testUpdateNext(Tester t) {
+    this.reset();
+    t.checkExpect(this.testNode1.next, null);
+    this.testNode1.updateNext(this.testNode2);
+    t.checkExpect(this.testNode1.next, this.testNode2);
+  }
+
+  // tests the size method
+  void testSize(Tester t) {
+    this.reset();
+    t.checkExpect(this.deque1.size(), 0);
+    t.checkExpect(this.deque2.size(), 4);
+    t.checkExpect(this.deque3.size(), 4);
+    t.checkExpect(this.deque4.size(), 3);
+  }
+
+  // tests the sizeStarter method
+  void testSizeStarter(Tester t) {
+    this.reset();
+    t.checkExpect(this.deque1.header.sizeStarter(), 0);
+    t.checkExpect(this.deque2.header.sizeStarter(), 4);
+    t.checkExpect(this.deque3.header.sizeStarter(), 4);
+    t.checkExpect(this.deque4.header.sizeStarter(), 3);
+  }
+
+  // tests the addToHead method
+  void testAddToHead(Tester t) {
+    this.reset();
+    this.deque1.addAtHead("aaa");
+    t.checkExpect(this.deque1.removeFromHead(), "aaa");
+    this.deque2.addAtHead("zbc");
+    t.checkExpect(this.deque2.removeFromHead(), "zbc");
+  }
+
+  // tests the addToTail method
+  void testAddToTail(Tester t) {
+    this.reset();
+    this.deque1.addAtTail("aaa");
+    t.checkExpect(this.deque1.removeFromTail(), "aaa");
+    this.deque2.addAtTail("zbc");
+    t.checkExpect(this.deque2.removeFromTail(), "zbc");
+  }
+
+  // tests the removeFromHead method
+  void testRemoveFromHead(Tester t) {
+    this.reset();
+    t.checkException(new RuntimeException("List is Empty"), this.deque1, "removeFromHead", null);
+    t.checkExpect(this.deque2.removeFromHead(), "abc");
+    t.checkExpect(this.deque2.removeFromHead(), "bcd");
+    t.checkExpect(this.deque2.removeFromHead(), "cde");
+    t.checkExpect(this.deque2.removeFromHead(), "def");
+    t.checkException(new RuntimeException("List is Empty"), this.deque2, "removeFromHead", null);
+    t.checkException(new RuntimeException("List is Empty"), this.sentinelNode, "removeFromHead",
+        null);
+  }
+
+  // tests the removeFromTail method
+  void testRemoveAtTail(Tester t) {
+    this.reset();
+    t.checkException(new RuntimeException("List is Empty"), this.deque1, "removeFromTail", null);
+    t.checkExpect(this.deque2.removeFromTail(), "def");
+    t.checkExpect(this.deque2.removeFromTail(), "cde");
+    t.checkExpect(this.deque2.removeFromTail(), "bcd");
+    t.checkExpect(this.deque2.removeFromTail(), "abc");
+    t.checkException(new RuntimeException("List is Empty"), this.deque2, "removeFromTail", null);
+    t.checkException(new RuntimeException("List is Empty"), this.sentinelNode, "removeFromHead",
+        null);
+  }
 }
