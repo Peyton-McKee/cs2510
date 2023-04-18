@@ -7,6 +7,7 @@ import javalib.impworld.*;
 import java.awt.Color;
 import javalib.worldimages.*;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Predicate;
 
 abstract class ANode<T> {
@@ -316,6 +317,14 @@ class EdgeWeightedGraph<T> {
   void addNode(Node<T> node) {
     this.nodes.add(node);
   }
+  
+  Node<T> getFirst() {
+    return this.nodes.get(0);
+  }
+  
+  Node<T> getLast() {
+    return this.nodes.get(this.nodes.size() - 1);
+  }
 
   // Adds an edge that is given to the graph
   void addEdge(Node<T> src, Node<T> destination, int weight) {
@@ -364,43 +373,19 @@ class EdgeWeightedGraph<T> {
 // Represents a maze
 class Maze extends World {
 
-  static int SCREEN_SIZE = 500;
-  EdgeWeightedGraph<Integer> world = new EdgeWeightedGraph<Integer>();
+  static int SCREEN_SIZE = 1000;
+  EdgeWeightedGraph<Integer> world;
   Random rand = new Random();
   int dimX;
   int dimY;
   int nodeSize;
+  boolean displayingSolution;
+  HashMap<Node<Integer>, DirectedEdge<Integer>> solution;
+  ArrayList<Node<Integer>> waterfall;
 
   // Constructor
   public Maze(int dimX, int dimY) {
-    this.dimX = dimX;
-    this.dimY = dimY;
-    this.nodeSize = (SCREEN_SIZE) / Math.max(dimX, dimY);
-    for (int i = 0; i < dimY; i++) {
-      for (int j = 0; j < dimX; j++) {
-        Color c = Color.gray;
-
-        if (i == 0 && j == 0) {
-          c = Color.green;
-        }
-        else if (i == dimY - 1 && j == dimX - 1) {
-          c = Color.pink;
-        }
-
-        Node<Integer> newNode = new Node<Integer>(((i * dimX) + j), i, j, c);
-        this.world.addNode(newNode);
-
-        if (i != 0) {
-          Node<Integer> top = this.world.get((i * dimX) - dimX + j);
-          this.world.addEdge(newNode, top, rand.nextInt());
-        }
-        if (j != 0) {
-          Node<Integer> left = this.world.get(i * dimX + j - 1);
-          this.world.addEdge(newNode, left, rand.nextInt());
-        }
-      }
-    }
-    this.makeMaze();
+    this.init(dimX, dimY);
   }
 
   // Makes the scene
@@ -436,32 +421,72 @@ class Maze extends World {
   // Runs the big bang based on a tick value
   @Override
   public void onTick() {
-
-    // Will be implemented in next assignment
+    if (this.displayingSolution) {
+      if (this.waterfall.size() == 0) {
+        for (Node<Integer> node : reconstruct(this.world.getLast(), this.solution, this.world.getFirst())) {
+          node.setColor(Color.blue);
+        }
+        this.displayingSolution = false;
+      } else {
+        this.waterfall.remove(0).setColor(Color.cyan);
+      }
+    }
   }
 
   // Resets the game with the 'r' key
   @Override
   public void onKeyEvent(String k) {
-    this.world.resetColors();
-    if (k.equals("r")) {
+    if (this.displayingSolution) {
       return;
     }
+    this.world.resetColors();
+    if (k.equals("r")) {
+      this.init(this.dimX, this.dimY);
+      return;
+    }
+    this.waterfall.clear();
     ICollection<Node<Integer>> collection = new Stack<Node<Integer>>();
     if (k.equals("b")) {
       collection = new Queue<Node<Integer>>();
     }
-    Node<Integer> from = this.world.nodes.get(0);
-    Node<Integer> to = this.world.nodes.get(this.world.nodes.size() - 1);
-    HashMap<Node<Integer>, DirectedEdge<Integer>> map = this.search(from, to, collection);
-    for (Node<Integer> node : map.keySet()) {
-      node.setColor(Color.cyan);
-    }
-    System.out.println(to);
-    for (Node<Integer> node : reconstruct(to, map, from)) {
-      node.setColor(Color.blue);
-    } // Will be implemented in next assignment
+    Node<Integer> from = this.world.getFirst();
+    Node<Integer> to = this.world.getLast();
+    this.solution = this.search(from, to, collection);
+    this.displayingSolution = true;
+  }
+  
+  void init(int dimX, int dimY) {
+    this.dimX = dimX;
+    this.dimY = dimY;
+    this.nodeSize = (SCREEN_SIZE) / Math.max(dimX, dimY);
+    this.world = new EdgeWeightedGraph<Integer>();
+    this.displayingSolution = false;
+    this.waterfall = new ArrayList<Node<Integer>>();
+    for (int i = 0; i < dimY; i++) {
+      for (int j = 0; j < dimX; j++) {
+        Color c = Color.gray;
 
+        if (i == 0 && j == 0) {
+          c = Color.green;
+        }
+        else if (i == dimY - 1 && j == dimX - 1) {
+          c = Color.pink;
+        }
+
+        Node<Integer> newNode = new Node<Integer>(((i * dimX) + j), i, j, c);
+        this.world.addNode(newNode);
+
+        if (i != 0) {
+          Node<Integer> top = this.world.get((i * dimX) - dimX + j);
+          this.world.addEdge(newNode, top, rand.nextInt());
+        }
+        if (j != 0) {
+          Node<Integer> left = this.world.get(i * dimX + j - 1);
+          this.world.addEdge(newNode, left, rand.nextInt());
+        }
+      }
+    }
+    this.makeMaze();
   }
 
   // Makes the maze randomly
@@ -493,7 +518,7 @@ class Maze extends World {
     ArrayList<Node<Integer>> seen = new ArrayList<Node<Integer>>();
     ICollection<Node<Integer>> worklist = collection;
     worklist.add(from);
-
+    this.waterfall.add(from);
     while (!worklist.isEmpty()) {
       Node<Integer> next = worklist.remove();
 
@@ -506,6 +531,7 @@ class Maze extends World {
       else {
         for (Node<Integer> neighbor : next.getNeighbors()) {
           worklist.add(neighbor);
+          this.waterfall.add(neighbor);
           if (!seen.contains(neighbor)) {
             cameFromEdge.put(neighbor, next.getEdgeTo(neighbor));
           }
@@ -563,7 +589,7 @@ class ExamplesMaze {
   World testerWorld2 = new Maze(5, 5);
   Maze testingMaze = new Maze(9, 9);
   Maze testingMaze2 = new Maze(4, 5);
-  World starterWorld = new Maze(50, 50);
+  World starterWorld = new Maze(100, 60);
   Node<Integer> node1;
   Node<String> node2;
   Node<Integer> node3;
@@ -596,7 +622,7 @@ class ExamplesMaze {
   // Example maze to play with
   void testWorld(Tester t) {
     this.init();
-    this.starterWorld.bigBang(Maze.SCREEN_SIZE, Maze.SCREEN_SIZE);
+    this.starterWorld.bigBang(Maze.SCREEN_SIZE, Maze.SCREEN_SIZE, .0001);
   }
 
   // tests the draw method
